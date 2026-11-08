@@ -20,6 +20,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add("js")</script>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114129348', 'ym');
+
+    ym(114129348, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    // Goals: lead = form sent, cta = button to the form, client_site = opened a client site, contact = VK chat, WhatsApp, Telegram or phone
+    window.goal = function(n, p){ try { ym(114129348, 'reachGoal', n, p); } catch (e) {} };
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/114129348" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfessionalService","name":"Леонтий Наумов, сайты для малого бизнеса","url":"https://leontiweb.ru/","image":"https://leontiweb.ru/img/og.jpg","telephone":"+79119496835","areaServed":"Санкт-Петербург","priceRange":"от 3 000 ₽","sameAs":["https://vk.ru/club242798044","https://vk.com/ileonti","https://kwork.ru/user/leontiq"]}</script>
 <style>
   :root{
@@ -663,6 +678,19 @@
     new IntersectionObserver(([e]) => { inStart = e.isIntersecting; sync(); }).observe($("start"));
   } else document.querySelectorAll(".rv").forEach(el => el.classList.add("in"));
 
+  // Metrica goals for clicks: buttons to the form, client sites (domains from the board), contacts
+  const goal = window.goal || (() => {});
+  const clients = new Set([...document.querySelectorAll(".board a.row")].map(a => a.hostname));
+  document.addEventListener("click", e => {
+    const a = e.target.closest ? e.target.closest("a[href]") : null; if (!a) return;
+    const h = a.getAttribute("href"), place = a.closest(".board") ? "board" : (a.closest("[id]") || {}).id || "";
+    if (h === "#start") goal("cta", {place});
+    else if (clients.has(a.hostname)) goal("client_site", {site: a.hostname, place});
+    else if (/^tel:/.test(h) || /^(vk\.me|wa\.me|t\.me)$/.test(a.hostname)) goal("contact", {via: /^tel:/.test(h) ? "phone" : a.hostname, place});
+  });
+  // visitors who came by the outreach link (leontiweb.ru/raboty adds these tags)
+  const fromOutreach = /utm_medium=message/.test(location.search);
+
   // lead form: goes to the demo Apps Script, which sends it to my VK
   const LEAD_URL = "https://script.google.com/macros/s/AKfycby3_mdaCfx-Kv0MWD1RiwXnmTO47GtAS9zrH0WZsPcyeEGYHIRrXQjAU_EtMCfIypOW/exec";
   const form = $("lead"), btn = $("send"), err = $("err"), ok = $("ok"), fb = $("fb");
@@ -683,12 +711,12 @@
     const ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(() => ctl && ctl.abort(), 20000);
     try {
       const res = await fetch(LEAD_URL, {method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"}, signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({site: location.hostname, name, phone, details: `Портфолио, бесплатный макет: ${link}`, comment, website: form.website.value})});
+        body: JSON.stringify({site: location.hostname, name, phone, details: `Портфолио${fromOutreach ? " (из рассылки ВК)" : ""}, бесплатный макет: ${link}`, comment, website: form.website.value})});
       sent = (await res.json()).ok === true;
     } catch (x) {}
     clearTimeout(timer);
     btn.disabled = false; btn.textContent = "Получить бесплатный макет";
-    if (sent) { btn.hidden = true; ok.hidden = false; form.reset(); }
+    if (sent) { btn.hidden = true; ok.hidden = false; form.reset(); goal("lead"); }
     else fb.hidden = false;
   });
 })();
