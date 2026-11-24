@@ -963,6 +963,34 @@
 <div class="float" id="float"><a class="btn btn-ghost" href="https://vk.me/club242798044" target="_blank" rel="noopener">ВКонтакте</a><a class="btn btn-acc" href="#start">Бесплатный макет</a></div>
 
 <script>
+// Flower mode: leontiweb.ru/cvety (outreach to florists) opens /?...&for=cvety.
+// Florist headline and phones, bouquet cases right under the first screen, bouquet sites on top of the board.
+(() => {
+  if (!/[?&]for=cvety\b/.test(location.search)) return;
+  const FL = ["malinka-zefir.ru", "lutiki-bukety.ru", "dari-ne-cvety.ru", "mikkitopt.ru"];
+  document.documentElement.classList.add("fl");
+  document.title = "Леонтий Наумов: сайты для флористов и цветочных магазинов в любом городе";
+  document.querySelector(".hero h1").innerHTML = "Сайты для <mark>флористов</mark> и&nbsp;цветочных магазинов в&nbsp;любом городе";
+  document.querySelector(".hero .lead").textContent = "Сначала соберу бесплатный макет на ваших букетах и ценах. Понравится, запущу сайт на вашем домене, и только потом вы платите. Работаю удалённо с любым городом: всё общение во ВКонтакте или мессенджере.";
+  const fan = ["lutiki", "malinka", "dari", "mikkitopt"];
+  document.querySelectorAll(".fan .ph img").forEach((im, i) => { im.src = "img/" + fan[i] + "-mob.webp"; });
+  // cases: bouquet ones first, renumbered
+  const cases = document.querySelector(".cases"), list = [...cases.querySelectorAll("article.case")];
+  const fl = FL.map(d => list.find(c => c.querySelector('.case-acts a[href="https://' + d + '/"]'))).filter(Boolean);
+  fl.slice().reverse().forEach(c => cases.prepend(c));
+  cases.querySelectorAll("article.case .num b").forEach((b, i) => { b.textContent = String(i + 1).padStart(2, "0"); });
+  const works = document.getElementById("works"), head = works.querySelector(".sec-head");
+  head.querySelector(".eyebrow").textContent = "Сайты для букетов";
+  head.querySelector("h2").textContent = "Букетные сайты, которые уже работают";
+  head.querySelector(".sub").textContent = "Четыре сайта для мастеров букетов: каталог с ценами, конструктор букета и заявки прямо в сообщения ВКонтакте. Все сайты открываются, можно посмотреть с телефона. Ниже остальные работы.";
+  // works section goes right after the first screen, before the client board
+  document.getElementById("hero").after(works);
+  // board: bouquet sites on top
+  const board = document.querySelector(".board"), hd = board.querySelector(".board-h");
+  [...board.querySelectorAll("a.row")].filter(a => FL.includes(a.hostname)).reverse().forEach(a => hd.after(a));
+})();
+</script>
+<script>
 (() => {
   const $ = id => document.getElementById(id);
   const top = $("top");
@@ -1013,7 +1041,7 @@
     const ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(() => ctl && ctl.abort(), 20000);
     try {
       const res = await fetch(LEAD_URL, {method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"}, signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({site: location.hostname, name, phone, details: `Портфолио${fromOutreach ? " (из рассылки ВК)" : ""}, бесплатный макет: ${link}`, comment, website: form.website.value})});
+        body: JSON.stringify({site: location.hostname, name, phone, details: `Портфолио${fromOutreach ? " (из рассылки ВК" + (/[?&]for=cvety\b/.test(location.search) ? ", цветы" : "") + ")" : ""}, бесплатный макет: ${link}`, comment, website: form.website.value})});
       sent = (await res.json()).ok === true;
     } catch (x) {}
     clearTimeout(timer);
